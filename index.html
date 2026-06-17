@@ -52,6 +52,7 @@
   .text-btn{background:none;border:none;color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer;padding:6px;}
 
   .msg{font-size:13px;color:var(--coral);text-align:center;margin-top:10px;min-height:16px;}
+  .gps-status{font-size:12px;color:var(--muted);text-align:center;margin:14px 0 0;}
 
   .history{margin-top:34px;}
   .history h2{font-size:15px;font-weight:700;margin:0 0 12px;}
@@ -76,6 +77,8 @@
       <div><div class="stat-label">Pace /km</div><div class="stat-value" id="paceVal">--:--</div></div>
     </div>
   </div>
+
+  <p class="gps-status" id="gpsStatus">Waiting for GPS signal…</p>
 
   <div class="controls">
     <button class="big-btn btn-start" id="startBtn">Start</button>
@@ -118,6 +121,9 @@
   let totalDistanceM = 0;
   let elapsedSec = 0;
   let finalStats = null;
+  let lastAccuracy = null;
+  const ACCURACY_THRESHOLD = 35; // metres — readings worse than this are too noisy to trust
+  const gpsStatusEl = document.getElementById('gpsStatus');
 
   function haversine(lat1, lon1, lat2, lon2){
     const R = 6371000;
@@ -145,22 +151,42 @@
     }
   }
 
+  function updateGpsStatus(){
+    if (lastAccuracy == null){
+      gpsStatusEl.textContent = 'Waiting for GPS signal…';
+      gpsStatusEl.style.color = 'var(--muted)';
+      return;
+    }
+    const ok = lastAccuracy <= ACCURACY_THRESHOLD;
+    gpsStatusEl.textContent = ok
+      ? `GPS accuracy: ${Math.round(lastAccuracy)} m`
+      : `GPS accuracy: ${Math.round(lastAccuracy)} m — too low to count yet. Go outdoors, or turn on Precise Location for this app.`;
+    gpsStatusEl.style.color = ok ? 'var(--teal-light)' : 'var(--coral)';
+  }
+
   function onPosition(pos){
     const { latitude, longitude, accuracy } = pos.coords;
-    if (accuracy && accuracy > 25){
-      return; // too noisy a reading, skip it
+    lastAccuracy = accuracy;
+    updateGpsStatus();
+    if (accuracy && accuracy > ACCURACY_THRESHOLD){
+      return; // too noisy a reading to trust for distance
     }
     if (lastPos){
       const segment = haversine(lastPos.latitude, lastPos.longitude, latitude, longitude);
       if (segment > 2){
         totalDistanceM += segment;
+        updateDisplay();
       }
     }
     lastPos = { latitude, longitude };
   }
 
-  function onPositionError(){
-    msg.textContent = "Couldn't access location. Check that location access is allowed for this app, then try again.";
+  function onPositionError(err){
+    let detail = '';
+    if (err && err.code === 1) detail = 'Location permission was denied.';
+    else if (err && err.code === 2) detail = 'Position unavailable — try an area with a clearer view of the sky.';
+    else if (err && err.code === 3) detail = 'Location request timed out.';
+    msg.textContent = `Couldn't get your location. ${detail} Check that precise location is allowed for this app, then try again.`;
     stopRun(false);
   }
 
@@ -173,6 +199,8 @@
     totalDistanceM = 0;
     elapsedSec = 0;
     lastPos = null;
+    lastAccuracy = null;
+    updateGpsStatus();
     startTime = Date.now();
     updateDisplay();
 
