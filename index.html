@@ -2,231 +2,104 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jog Tracker Pro</title>
-    <!-- Leaflet Map Engine Style Assets -->
-    <link rel="stylesheet" href="https://unpkg.com" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jog Tracker</title>
     <style>
-        :root {
-            --bg-color: #f2f2f7;
-            --card-bg: rgba(255, 255, 255, 0.8);
-            --text-main: #000000;
-            --text-sub: #8e8e93;
-            --accent-blue: #007aff;
-            --accent-green: #34c759;
-            --accent-red: #ff3b30;
-            --border-color: rgba(0, 0, 0, 0.1);
-            --blur-strength: saturate(180%) blur(20px);
-        }
-
-        [data-theme="dark"] {
-            --bg-color: #000000;
-            --card-bg: rgba(28, 28, 30, 0.8);
-            --text-main: #ffffff;
-            --text-sub: #8e8e93;
-            --accent-blue: #0a84ff;
-            --accent-green: #30d158;
-            --accent-red: #ff453a;
-            --border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            transition: background-color 0.3s ease, color 0.3s ease;
-            display: flex;
-            justify-content: center;
-        }
-
-        .phone-wrapper {
-            width: 100%;
-            max-width: 440px;
-            min-height: 100vh;
             padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+            background-color: #f5f7fa;
+            color: #333;
+            text-align: center;
         }
-
-        /* Apple Style Navigation Bar Header */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
         }
-
-        header h1 {
-            font-size: 28px;
-            font-weight: 700;
-            margin: 0;
-            letter-spacing: -0.5px;
-        }
-
-        .theme-btn {
-            background: var(--card-bg);
-            border: 1px solid var(--border-color);
-            backdrop-filter: var(--blur-strength);
-            -webkit-backdrop-filter: var(--blur-strength);
-            color: var(--text-main);
-            padding: 8px 12px;
+        h1 { margin-bottom: 5px; color: #1a73e8; }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: #e8f0fe;
+            color: #1a73e8;
             border-radius: 20px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        /* Apple Style Cards */
-        .ios-card {
-            background: var(--card-bg);
-            backdrop-filter: var(--blur-strength);
-            -webkit-backdrop-filter: var(--blur-strength);
-            border: 1px solid var(--border-color);
-            border-radius: 14px;
-            padding: 16px;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
-        }
-
-        /* Gamification Trophy Dashboard Row */
-        .streak-row {
-            display: flex;
-            justify-content: space-around;
-            text-align: center;
-        }
-
-        .streak-stat h4 { margin: 0; font-size: 20px; font-weight: 700; }
-        .streak-stat p { margin: 4px 0 0 0; font-size: 11px; color: var(--text-sub); text-transform: uppercase; font-weight: 600; }
-
-        /* Embedded Dynamic Leaflet Map Box */
-        #map-container {
-            height: 200px;
-            border-radius: 14px;
-            overflow: hidden;
-            border: 1px solid var(--border-color);
-            z-index: 1;
-        }
-
-        /* Performance Metrics Layout Grid */
-        .metrics-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .metric-box {
-            text-align: center;
-            padding: 12px;
-        }
-
-        .metric-value {
-            font-size: 36px;
-            font-weight: 700;
-            letter-spacing: -1px;
-        }
-
-        .metric-label {
             font-size: 12px;
-            font-weight: 600;
-            color: var(--text-sub);
-            text-transform: uppercase;
-            margin-top: 2px;
+            font-weight: bold;
+            margin-bottom: 20px;
         }
-
-        /* Interactive iOS Pill Buttons */
-        .ios-btn {
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        .stat-box {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #eee;
+        }
+        .stat-value { font-size: 32px; font-weight: bold; color: #111; }
+        .stat-label { font-size: 12px; color: #666; text-transform: uppercase; }
+        .btn {
             width: 100%;
-            padding: 16px;
+            padding: 15px;
             border: none;
-            border-radius: 14px;
-            font-size: 17px;
-            font-weight: 600;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.2s, transform 0.1s;
+            transition: transform 0.1s;
+            margin-bottom: 10px;
         }
-
-        .ios-btn:active {
-            transform: scale(0.98);
+        .btn:active { transform: scale(0.98); }
+        .btn-start { background-color: #34a853; color: white; }
+        .btn-stop { background-color: #ea4335; color: white; display: none; }
+        .history-section {
+            margin-top: 30px;
+            text-align: left;
         }
-
-        .btn-primary { background-color: var(--accent-blue); color: #ffffff; }
-        .btn-danger { background-color: var(--accent-red); color: #ffffff; display: none; }
-
-        /* Structured Scrollable Logs Container */
-        .history-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: 8px;
-        }
-
         .history-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--border-color);
+            background: #fff;
+            border-left: 4px solid #1a73e8;
+            padding: 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
-
-        .history-item:last-child { border-bottom: none; }
-        .history-date { font-weight: 600; font-size: 15px; }
-        .history-meta { font-size: 14px; color: var(--text-sub); }
     </style>
 </head>
 <body>
 
-<div class="phone-wrapper">
-    <header>
-        <h1>Fitness</h1>
-        <button id="theme-toggle" class="theme-btn">Dark Mode</button>
-    </header>
+<div class="container">
+    <h1>Jog Tracker</h1>
+    <div id="gps-status" class="status-badge">Waiting for GPS...</div>
 
-    <!-- Gamification & Records Panel -->
-    <div class="ios-card streak-row">
-        <div class="streak-stat">
-            <h4 id="streak-val">0 🔥</h4>
-            <p>Day Streak</p>
+    <div class="stats-grid">
+        <div class="stat-box">
+            <div id="distance" class="stat-value">0.00</div>
+            <div class="stat-label">Kilometers</div>
         </div>
-        <div class="streak-stat">
-            <h4 id="record-val">0.00 🏆</h4>
-            <p>Personal Best</p>
+        <div class="stat-box">
+            <div id="duration" class="stat-value">00:00</div>
+            <div class="stat-label">Time Elapsed</div>
         </div>
     </div>
 
-    <!-- Live Map Frame Container -->
-    <div id="map-container"></div>
+    <button id="start-btn" class="btn btn-start">Start Tracking</button>
+    <button id="stop-btn" class="btn btn-stop">Stop & Save Run</button>
 
-    <!-- Active Analytics Panel -->
-    <div class="ios-card metrics-grid">
-        <div class="metric-box">
-            <div id="distance" class="metric-value">0.00</div>
-            <div class="metric-label">Kilometers</div>
-        </div>
-        <div class="metric-box">
-            <div id="duration" class="metric-value">00:00</div>
-            <div class="metric-label">Duration</div>
-        </div>
-    </div>
-
-    <button id="start-btn" class="ios-btn btn-primary">Start Workout</button>
-    <button id="stop-btn" class="ios-btn btn-danger">End Workout</button>
-
-    <!-- Past Sessions Feed Wrapper -->
-    <div class="ios-card">
-        <span style="font-weight: 700; font-size: 18px; letter-spacing: -0.3px;">History</span>
-        <div id="history-feed" class="history-list"></div>
+    <div class="history-section">
+        <h3>Run History</h3>
+        <div id="history-list"></div>
     </div>
 </div>
 
-<!-- Embedded Leaflet.js Mapping Library Integration -->
-<script src="https://unpkg.com" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script src="app.js"></script>
 </body>
 </html>
