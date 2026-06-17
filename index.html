@@ -1,330 +1,232 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Jog Tracker</title>
-<meta name="theme-color" content="#0F6E56">
-<link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
-<style>
-  :root{
-    --bg:#FAF8F3; --ink:#1A1A18; --muted:#6B6A63;
-    --card:#16241F; --card-text:#EFEAE0;
-    --teal:#0F6E56; --teal-light:#1D9E75; --coral:#D85A30; --sand:#ECE6D8;
-  }
-  *{box-sizing:border-box;}
-  body{
-    background:var(--bg); color:var(--ink); margin:0; padding:28px 18px 56px;
-    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  }
-  .app{max-width:420px;margin:0 auto;}
-  h1{font-size:21px;font-weight:700;letter-spacing:0.01em;margin:0 0 2px;}
-  .sub{color:var(--muted);font-size:13px;margin:0 0 18px;}
-  .status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted);margin-bottom:18px;}
-  .dot{width:8px;height:8px;border-radius:50%;background:#8a8a82;flex:none;}
-  .dot.online{background:var(--teal-light);}
-  .dot.offline{background:var(--coral);}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jog Tracker Pro</title>
+    <!-- Leaflet Map Engine Style Assets -->
+    <link rel="stylesheet" href="https://unpkg.com" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <style>
+        :root {
+            --bg-color: #f2f2f7;
+            --card-bg: rgba(255, 255, 255, 0.8);
+            --text-main: #000000;
+            --text-sub: #8e8e93;
+            --accent-blue: #007aff;
+            --accent-green: #34c759;
+            --accent-red: #ff3b30;
+            --border-color: rgba(0, 0, 0, 0.1);
+            --blur-strength: saturate(180%) blur(20px);
+        }
 
-  .watch{background:var(--card);color:var(--card-text);border-radius:28px;padding:34px 22px 28px;text-align:center;position:relative;}
-  .rec{position:absolute;top:18px;right:20px;display:flex;align-items:center;gap:6px;font-size:11px;letter-spacing:.08em;opacity:.7;}
-  .rec .pulse{width:8px;height:8px;border-radius:50%;background:var(--coral);}
-  @media (prefers-reduced-motion:no-preference){
-    .rec.live .pulse{animation:pulse 1.4s ease-in-out infinite;}
-  }
-  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.25;}}
-  .distance{font-size:54px;font-weight:700;letter-spacing:-0.02em;line-height:1;font-variant-numeric:tabular-nums;}
-  .distance .unit{font-size:15px;font-weight:400;opacity:.6;margin-left:6px;}
-  .row{display:flex;justify-content:center;gap:34px;margin-top:18px;}
-  .stat-label{font-size:10.5px;opacity:.55;text-transform:uppercase;letter-spacing:.08em;}
-  .stat-value{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:3px;}
+        [data-theme="dark"] {
+            --bg-color: #000000;
+            --card-bg: rgba(28, 28, 30, 0.8);
+            --text-main: #ffffff;
+            --text-sub: #8e8e93;
+            --accent-blue: #0a84ff;
+            --accent-green: #30d158;
+            --accent-red: #ff453a;
+            --border-color: rgba(255, 255, 255, 0.15);
+        }
 
-  .controls{display:flex;justify-content:center;margin:28px 0 8px;}
-  .big-btn{width:100px;height:100px;border-radius:50%;border:none;font-size:15px;font-weight:600;color:#fff;cursor:pointer;}
-  .big-btn:focus-visible{outline:3px solid var(--ink);outline-offset:3px;}
-  .btn-start{background:var(--teal-light);}
-  .btn-stop{background:var(--coral);}
-  .hidden{display:none !important;}
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-  .after-stop{display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:8px;}
-  .btn-save{background:var(--teal);color:#fff;border:none;border-radius:24px;padding:13px 30px;font-size:15px;font-weight:600;cursor:pointer;}
-  .btn-save:focus-visible{outline:3px solid var(--ink);outline-offset:2px;}
-  .text-btn{background:none;border:none;color:var(--muted);font-size:13px;text-decoration:underline;cursor:pointer;padding:6px;}
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            display: flex;
+            justify-content: center;
+        }
 
-  .msg{font-size:13px;color:var(--coral);text-align:center;margin-top:10px;min-height:16px;}
-  .gps-status{font-size:12px;color:var(--muted);text-align:center;margin:14px 0 0;}
+        .phone-wrapper {
+            width: 100%;
+            max-width: 440px;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
 
-  .history{margin-top:34px;}
-  .history h2{font-size:15px;font-weight:700;margin:0 0 12px;}
-  .run-item{display:flex;justify-content:space-between;align-items:center;background:var(--sand);border-radius:14px;padding:13px 16px;margin-bottom:10px;}
-  .run-item .meta{font-size:12.5px;color:var(--muted);}
-  .run-item .num{font-weight:600;font-size:15px;}
-  .run-item .del{background:none;border:none;color:var(--muted);font-size:12.5px;cursor:pointer;text-decoration:underline;}
-  .empty{color:var(--muted);font-size:14px;padding:6px 0;}
-</style>
+        /* Apple Style Navigation Bar Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        header h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .theme-btn {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            backdrop-filter: var(--blur-strength);
+            -webkit-backdrop-filter: var(--blur-strength);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Apple Style Cards */
+        .ios-card {
+            background: var(--card-bg);
+            backdrop-filter: var(--blur-strength);
+            -webkit-backdrop-filter: var(--blur-strength);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 16px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+        }
+
+        /* Gamification Trophy Dashboard Row */
+        .streak-row {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+
+        .streak-stat h4 { margin: 0; font-size: 20px; font-weight: 700; }
+        .streak-stat p { margin: 4px 0 0 0; font-size: 11px; color: var(--text-sub); text-transform: uppercase; font-weight: 600; }
+
+        /* Embedded Dynamic Leaflet Map Box */
+        #map-container {
+            height: 200px;
+            border-radius: 14px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+            z-index: 1;
+        }
+
+        /* Performance Metrics Layout Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .metric-box {
+            text-align: center;
+            padding: 12px;
+        }
+
+        .metric-value {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .metric-label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-sub);
+            text-transform: uppercase;
+            margin-top: 2px;
+        }
+
+        /* Interactive iOS Pill Buttons */
+        .ios-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        .ios-btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary { background-color: var(--accent-blue); color: #ffffff; }
+        .btn-danger { background-color: var(--accent-red); color: #ffffff; display: none; }
+
+        /* Structured Scrollable Logs Container */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 8px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .history-item:last-child { border-bottom: none; }
+        .history-date { font-weight: 600; font-size: 15px; }
+        .history-meta { font-size: 14px; color: var(--text-sub); }
+    </style>
 </head>
 <body>
-<div class="app">
-  <h1>Jog tracker</h1>
-  <p class="sub">Tracks distance with GPS. Saved runs stay on this phone, even offline.</p>
-  <div class="status"><span class="dot" id="netDot"></span><span id="netText">Checking connection…</span></div>
 
-  <div class="watch">
-    <div class="rec" id="rec"><span class="pulse"></span><span id="recText">Idle</span></div>
-    <div class="distance"><span id="distanceVal">0.00</span><span class="unit">km</span></div>
-    <div class="row">
-      <div><div class="stat-label">Time</div><div class="stat-value" id="timeVal">00:00</div></div>
-      <div><div class="stat-label">Pace /km</div><div class="stat-value" id="paceVal">--:--</div></div>
+<div class="phone-wrapper">
+    <header>
+        <h1>Fitness</h1>
+        <button id="theme-toggle" class="theme-btn">Dark Mode</button>
+    </header>
+
+    <!-- Gamification & Records Panel -->
+    <div class="ios-card streak-row">
+        <div class="streak-stat">
+            <h4 id="streak-val">0 🔥</h4>
+            <p>Day Streak</p>
+        </div>
+        <div class="streak-stat">
+            <h4 id="record-val">0.00 🏆</h4>
+            <p>Personal Best</p>
+        </div>
     </div>
-  </div>
 
-  <p class="gps-status" id="gpsStatus">Waiting for GPS signal…</p>
+    <!-- Live Map Frame Container -->
+    <div id="map-container"></div>
 
-  <div class="controls">
-    <button class="big-btn btn-start" id="startBtn">Start</button>
-    <button class="big-btn btn-stop hidden" id="stopBtn">Stop</button>
-  </div>
+    <!-- Active Analytics Panel -->
+    <div class="ios-card metrics-grid">
+        <div class="metric-box">
+            <div id="distance" class="metric-value">0.00</div>
+            <div class="metric-label">Kilometers</div>
+        </div>
+        <div class="metric-box">
+            <div id="duration" class="metric-value">00:00</div>
+            <div class="metric-label">Duration</div>
+        </div>
+    </div>
 
-  <div class="after-stop hidden" id="afterStop">
-    <button class="btn-save" id="saveBtn">Save run</button>
-    <button class="text-btn" id="discardBtn">Discard</button>
-  </div>
+    <button id="start-btn" class="ios-btn btn-primary">Start Workout</button>
+    <button id="stop-btn" class="ios-btn btn-danger">End Workout</button>
 
-  <div class="msg" id="msg"></div>
-
-  <div class="history">
-    <h2>Run history</h2>
-    <div id="historyList"></div>
-  </div>
+    <!-- Past Sessions Feed Wrapper -->
+    <div class="ios-card">
+        <span style="font-weight: 700; font-size: 18px; letter-spacing: -0.3px;">History</span>
+        <div id="history-feed" class="history-list"></div>
+    </div>
 </div>
 
-<script>
-  const startBtn = document.getElementById('startBtn');
-  const stopBtn = document.getElementById('stopBtn');
-  const afterStop = document.getElementById('afterStop');
-  const saveBtn = document.getElementById('saveBtn');
-  const discardBtn = document.getElementById('discardBtn');
-  const distanceVal = document.getElementById('distanceVal');
-  const timeVal = document.getElementById('timeVal');
-  const paceVal = document.getElementById('paceVal');
-  const msg = document.getElementById('msg');
-  const rec = document.getElementById('rec');
-  const recText = document.getElementById('recText');
-  const netDot = document.getElementById('netDot');
-  const netText = document.getElementById('netText');
-  const historyList = document.getElementById('historyList');
-
-  let watchId = null;
-  let timerId = null;
-  let startTime = null;
-  let lastPos = null;
-  let totalDistanceM = 0;
-  let elapsedSec = 0;
-  let finalStats = null;
-  let lastAccuracy = null;
-  const ACCURACY_THRESHOLD = 35; // metres — readings worse than this are too noisy to trust
-  const gpsStatusEl = document.getElementById('gpsStatus');
-
-  function haversine(lat1, lon1, lat2, lon2){
-    const R = 6371000;
-    const toRad = d => d * Math.PI / 180;
-    const dLat = toRad(lat2 - lat1);
-    const dLon = toRad(lon2 - lon1);
-    const a = Math.sin(dLat/2)**2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon/2)**2;
-    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  }
-
-  function formatClock(totalSeconds){
-    const m = Math.floor(totalSeconds / 60).toString().padStart(2, '0');
-    const s = Math.floor(totalSeconds % 60).toString().padStart(2, '0');
-    return `${m}:${s}`;
-  }
-
-  function updateDisplay(){
-    distanceVal.textContent = (totalDistanceM / 1000).toFixed(2);
-    timeVal.textContent = formatClock(elapsedSec);
-    if (totalDistanceM > 0){
-      const paceSecPerKm = elapsedSec / (totalDistanceM / 1000);
-      paceVal.textContent = formatClock(paceSecPerKm);
-    } else {
-      paceVal.textContent = '--:--';
-    }
-  }
-
-  function updateGpsStatus(){
-    if (lastAccuracy == null){
-      gpsStatusEl.textContent = 'Waiting for GPS signal…';
-      gpsStatusEl.style.color = 'var(--muted)';
-      return;
-    }
-    const ok = lastAccuracy <= ACCURACY_THRESHOLD;
-    gpsStatusEl.textContent = ok
-      ? `GPS accuracy: ${Math.round(lastAccuracy)} m`
-      : `GPS accuracy: ${Math.round(lastAccuracy)} m — too low to count yet. Go outdoors, or turn on Precise Location for this app.`;
-    gpsStatusEl.style.color = ok ? 'var(--teal-light)' : 'var(--coral)';
-  }
-
-  function onPosition(pos){
-    const { latitude, longitude, accuracy } = pos.coords;
-    lastAccuracy = accuracy;
-    updateGpsStatus();
-    if (accuracy && accuracy > ACCURACY_THRESHOLD){
-      return; // too noisy a reading to trust for distance
-    }
-    if (lastPos){
-      const segment = haversine(lastPos.latitude, lastPos.longitude, latitude, longitude);
-      if (segment > 2){
-        totalDistanceM += segment;
-        updateDisplay();
-      }
-    }
-    lastPos = { latitude, longitude };
-  }
-
-  function onPositionError(err){
-    let detail = '';
-    if (err && err.code === 1) detail = 'Location permission was denied.';
-    else if (err && err.code === 2) detail = 'Position unavailable — try an area with a clearer view of the sky.';
-    else if (err && err.code === 3) detail = 'Location request timed out.';
-    msg.textContent = `Couldn't get your location. ${detail} Check that precise location is allowed for this app, then try again.`;
-    stopRun(false);
-  }
-
-  function startRun(){
-    if (!('geolocation' in navigator)){
-      msg.textContent = 'This device has no location support, so distance can\'t be tracked.';
-      return;
-    }
-    msg.textContent = '';
-    totalDistanceM = 0;
-    elapsedSec = 0;
-    lastPos = null;
-    lastAccuracy = null;
-    updateGpsStatus();
-    startTime = Date.now();
-    updateDisplay();
-
-    watchId = navigator.geolocation.watchPosition(onPosition, onPositionError, {
-      enableHighAccuracy: true, maximumAge: 1000, timeout: 15000
-    });
-    timerId = setInterval(() => {
-      elapsedSec = (Date.now() - startTime) / 1000;
-      updateDisplay();
-    }, 1000);
-
-    startBtn.classList.add('hidden');
-    stopBtn.classList.remove('hidden');
-    afterStop.classList.add('hidden');
-    rec.classList.add('live');
-    recText.textContent = 'Tracking';
-  }
-
-  function stopRun(showAfterStop = true){
-    if (watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
-    if (timerId !== null){ clearInterval(timerId); timerId = null; }
-    rec.classList.remove('live');
-    recText.textContent = 'Idle';
-    stopBtn.classList.add('hidden');
-
-    finalStats = {
-      distanceM: totalDistanceM,
-      durationSec: elapsedSec,
-      dateISO: new Date().toISOString()
-    };
-
-    if (showAfterStop){
-      afterStop.classList.remove('hidden');
-    } else {
-      resetToIdle();
-    }
-  }
-
-  function resetToIdle(){
-    afterStop.classList.add('hidden');
-    startBtn.classList.remove('hidden');
-    totalDistanceM = 0;
-    elapsedSec = 0;
-    updateDisplay();
-  }
-
-  function loadHistory(){
-    try {
-      return JSON.parse(localStorage.getItem('jogRuns') || '[]');
-    } catch (e) {
-      return [];
-    }
-  }
-
-  function saveHistory(runs){
-    localStorage.setItem('jogRuns', JSON.stringify(runs));
-  }
-
-  function renderHistory(){
-    const runs = loadHistory();
-    if (runs.length === 0){
-      historyList.innerHTML = '<p class="empty">No runs saved yet. Your first save will show up here.</p>';
-      return;
-    }
-    historyList.innerHTML = runs.slice().reverse().map(run => {
-      const km = (run.distanceM / 1000).toFixed(2);
-      const time = formatClock(run.durationSec);
-      const pace = run.distanceM > 0 ? formatClock(run.durationSec / (run.distanceM / 1000)) : '--:--';
-      const date = new Date(run.dateISO).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-      return `<div class="run-item">
-        <div>
-          <div class="num">${km} km · ${time}</div>
-          <div class="meta">${date} · pace ${pace}/km</div>
-        </div>
-        <button class="del" data-id="${run.id}">Delete</button>
-      </div>`;
-    }).join('');
-  }
-
-  saveBtn.addEventListener('click', () => {
-    if (!finalStats) return;
-    const runs = loadHistory();
-    runs.push({ id: Date.now().toString(), ...finalStats });
-    saveHistory(runs);
-    renderHistory();
-    finalStats = null;
-    resetToIdle();
-  });
-
-  discardBtn.addEventListener('click', () => {
-    finalStats = null;
-    resetToIdle();
-  });
-
-  historyList.addEventListener('click', (e) => {
-    if (e.target.classList.contains('del')){
-      const id = e.target.getAttribute('data-id');
-      const runs = loadHistory().filter(r => r.id !== id);
-      saveHistory(runs);
-      renderHistory();
-    }
-  });
-
-  startBtn.addEventListener('click', startRun);
-  stopBtn.addEventListener('click', () => stopRun(true));
-
-  function updateNetStatus(){
-    const online = navigator.onLine;
-    netDot.classList.toggle('online', online);
-    netDot.classList.toggle('offline', !online);
-    netText.textContent = online ? 'Online' : 'Offline — runs still save normally';
-  }
-  window.addEventListener('online', updateNetStatus);
-  window.addEventListener('offline', updateNetStatus);
-  updateNetStatus();
-
-  if ('serviceWorker' in navigator){
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
-    });
-  }
-
-  updateDisplay();
-  renderHistory();
-</script>
+<!-- Embedded Leaflet.js Mapping Library Integration -->
+<script src="https://unpkg.com" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="app.js"></script>
 </body>
 </html>
